@@ -1,0 +1,37 @@
+SHORT REPORT
+============================================================
+
+PART 1: INVESTMENT
+------------------------------------------------------------
+Chosen company: Apple Inc. (AAPL)
+Investment amount: $15,000.00
+Target buy time: 2026-03-31T17:00:00-05:00
+Nearest market timestamp used: 2026-03-31T20:30:00+00:00
+Buy price used: $253.58
+Expected evaluation time: 2026-04-02T14:00:00-05:00
+
+Yahoo Finance support analysis:
+- Last close: $253.79
+- 20-day moving average: $253.97
+- 5-day return: 0.85%
+- 20-day return: -3.78%
+- Annualized volatility (simple estimate): 25.19%
+- Expected profit from simple linear trend (5 business days): -3.57%
+
+Brief rationale: The final decision was made based on the agreement between multiple generative models, which consistently recommended Apple Inc. as a stable and promising short-term investment. Both analyses highlighted a positive recent trend, strong market presence, and relatively low risk compared to other options. Additionally, a simple analysis using Yahoo Finance data supported this choice, indicating a moderate expected return. Therefore, selecting AAPL increases confidence in achieving a short-term profit.
+
+PART 2: PROMPTS
+------------------------------------------------------------
+Model 1: ChatGPT
+Prompt: Using Yahoo Finance style analysis, suggest one stock to invest $15,000 in today for short-term profit until next Thursday at 2 PM. Include expected return percentage and a brief justification based on recent trends.
+Recommended ticker/company: AAPL / Apple Inc.
+Expected profit (%): 2.5
+Reasoning summary: The stock shows a stable upward trend in recent weeks, supported by strong market performance and investor confidence. This suggests a moderate short-term growth opportunity with relatively low risk.
+
+Model 2: DeepSeek
+Prompt: Suggest a stock for short-term investment using recent market trends and Yahoo Finance data. The goal is to maximize profit within a few days with moderate risk.
+Recommended ticker/company: AAPL / Apple Inc.
+Expected profit (%): 3
+Reasoning summary: The stock presents consistent price stability and positive momentum, making it a suitable option for short-term investment with controlled risk.
+
+Evaluation status: Pending until the target evaluation time.
