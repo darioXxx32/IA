@@ -1,0 +1,19 @@
+# Entorno virtual
+venv/
+
+# Python
+__pycache__/
+*.pyc
+
+# LaTeX archivos temporales
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.toc
+*.synctex.gz
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
