@@ -1,0 +1,574 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{amsmath,amssymb}
+\usepackage[margin=2.2cm]{geometry}
+\usepackage{xcolor}
+\usepackage{tcolorbox}
+\usepackage{enumitem}
+\usepackage{hyperref}
+
+\definecolor{primaryblue}{RGB}{20, 50, 110}
+\definecolor{darkgreen}{RGB}{20, 100, 45}
+\definecolor{accentorange}{RGB}{180, 75, 10}
+
+\tcbset{
+    colback=gray!5,
+    colframe=primaryblue,
+    arc=3mm,
+    boxrule=1pt,
+    left=4mm, right=4mm, top=3mm, bottom=3mm
+}
+
+\begin{document}
+
+% =====================================================================
+% SLIDE 1
+% =====================================================================
+\section{Slide 1: Proposal Title}
+\textbf{Slide Title:} \textit{Evaluating FedAvg and FedProx for Federated Crop Disease Detection under Data Heterogeneity} \\
+\textbf{Suggested Timing:} 35--45 seconds.
+
+\begin{tcolorbox}[colframe=primaryblue, title=\textbf{What to Say in the Presentation (Literal Script)}]
+``Good morning [afternoon], distinguished committee members and colleagues.
+
+Today, I present my research project proposal titled: \textbf{`Evaluating FedAvg and FedProx for Federated Crop Disease Detection under Data Heterogeneity: A Simulated Collaborative Agricultural Network with Non-IID Foliar Distributions'}.
+
+This work lies directly at the intersection of \textbf{Distributed Systems} and applied machine learning. We design and simulate an environment where multiple agricultural farms cooperate as autonomous compute nodes to train a global crop diagnostic model, without ever centralizing their private data, and formally addressing the challenges of latency, statistical heterogeneity, and fault tolerance.''
+\end{tcolorbox}
+
+\textbf{Transition:} \textit{``To understand the critical need for this distributed architecture, let us first examine the agronomic problem and the bottlenecks of traditional centralized approaches.''}
+
+\vspace{0.35cm}\hrule\vspace{0.35cm}
+
+% =====================================================================
+% SLIDE 2
+% =====================================================================
+\section{Slide 2: Real-World Motivation: Agricultural Impact \& Data Silos}
+\textbf{Slide Title:} \textit{Real-World Motivation: Agricultural Impact \& Data Silos} \\
+\textbf{Suggested Timing:} 50--60 seconds.
+
+\begin{tcolorbox}[colframe=primaryblue, title=\textbf{Key Distributed Systems Points to Emphasize}]
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Failures of centralized cloud computing:} Excessive traffic over weak, unstable rural WAN links.
+    \item \textbf{Data sovereignty and silos:} Commercial privacy of agricultural producers.
+    \item \textbf{Federated Learning (FL) paradigm:} Moving computation to where data resides, rather than data to computation.
+\end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colframe=darkgreen, title=\textbf{What to Say in the Presentation (Literal Script)}]
+``Globally, foliar crop diseases cause catastrophic annual yield losses: between \textbf{20\% and 40\% of global crop yields}, according to research published in \textit{Nature Ecology \& Evolution}. Early computer vision-based diagnosis can cut \textbf{unnecessary chemical pesticide misuse by up to 50\%}.
+
+However, in real-world agricultural settings, \textbf{centralized cloud architectures break down} due to two fundamental distributed systems barriers:
+\begin{enumerate}
+    \item \textbf{Commercial confidentiality and sovereignty:} Photographic records of crop pests and yields are private strategic assets; farmers strictly refuse to upload them to third-party central repositories.
+    \item \textbf{Rural WAN bottlenecks:} Farms operate over satellite or 3G/4G cellular connections with severely limited bandwidth; uploading gigabytes of high-resolution imagery is both economically and technically infeasible.
+\end{enumerate}
+
+\textbf{Our solution:} We deploy \textbf{Federated Learning (FL)}. We decouple the training process: raw images remain locally on the farms, and only serialized numerical parameters travel across the network.''
+\end{tcolorbox}
+
+\textbf{Transition:} \textit{``However, decentralizing the learning process introduces a major theoretical hurdle inherent to distributed data: statistical heterogeneity, or the Non-IID phenomenon.''}
+
+\vspace{0.35cm}\hrule\vspace{0.35cm}
+
+% =====================================================================
+% SLIDE 3
+% =====================================================================
+\section{Slide 3: The Distributed Challenge: Non-IID Foliar Skew \& Client Drift}
+\textbf{Slide Title:} \textit{The Distributed Challenge: Non-IID Foliar Skew \& Client Drift} \\
+\textbf{Suggested Timing:} 55--65 seconds.
+
+\begin{tcolorbox}[colframe=primaryblue, title=\textbf{Key Distributed Systems Points to Emphasize}]
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Statistical heterogeneity (Non-IID):} Asymmetric local data distributions across individual nodes.
+    \item \textbf{Client Drift:} Local gradients diverge toward conflicting local optima.
+    \item \textbf{Destructive interference in FedAvg:} Catastrophic degradation on minority classes and inter-round oscillations.
+\end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colframe=darkgreen, title=\textbf{What to Say in the Presentation (Literal Script)}]
+``In a real-world distributed system, agricultural data is \textbf{never identically distributed (Non-IID)}. As shown on the slide:
+\begin{itemize}
+    \item \textbf{Farm A}, situated in a humid valley, primarily concentrates necrotic blights and rusts.
+    \item \textbf{Farm B}, in a cooler highland region, exhibits mostly bacterial spot pathologies.
+    \item \textbf{Farm C}, in the lowlands, gathers viral infections alongside healthy foliage.
+\end{itemize}
+Compounding this is \textit{Covariate Shift}: differing sunlight angles, soil backgrounds, and mobile camera sensors.
+
+\textbf{The critical distributed systems consequence is Client Drift:} When each farm runs multiple local SGD epochs, its model weights converge toward mutually incompatible local minima. When naively averaging these weights using the classical \textbf{FedAvg} algorithm, the client gradients interfere destructively: the system suffers from sluggish convergence, severe oscillations, and worst of all, the \textbf{catastrophic forgetting of minority crop diseases}.''
+\end{tcolorbox}
+
+\textbf{Transition:} \textit{``To address this distributed pathology, we formulate our core research question and formal testable hypotheses.''}
+
+\vspace{0.35cm}\hrule\vspace{0.35cm}
+
+% =====================================================================
+% SLIDE 4
+% =====================================================================
+\section{Slide 4: Research Question \& Formal Hypotheses}
+\textbf{Slide Title:} \textit{Research Question \& Formal Hypotheses} \\
+\textbf{Suggested Timing:} 50--60 seconds.
+
+\begin{tcolorbox}[colframe=darkgreen, title=\textbf{What to Say in the Presentation (Literal Script)}]
+``Our central research question is formulated as follows:
+\begin{quote}
+\textit{`To what extent does the FedProx algorithm improve diagnostic performance, consensus stability, and cross-client generalization compared to FedAvg in a three-node distributed agricultural system under heterogeneous (Non-IID) data distributions?'}
+\end{quote}
+
+To rigorously investigate this, we propose four testable hypotheses:
+\begin{itemize}
+    \item \textbf{Hypothesis 1 (Performance Equity):} Under homogeneous (IID) data, FedAvg and FedProx will achieve parity; however, under severe Non-IID skew, FedProx will outperform FedAvg in Macro-F1 score and safeguard recall on rare diseases.
+    \item \textbf{Hypothesis 2 (Optimization Stability):} FedProx will dampen inter-round oscillations via its proximal penalty, achieving a significantly lower inter-round variance ($S_{\Delta acc}$).
+    \item \textbf{Hypothesis 3 ($\mu$ Sensitivity):} There exists an optimal intermediate value of $\mu \in [0.01, 0.1]$; an excessively large $\mu$ ($\ge 1.0$) will overly constrain and freeze local learning.
+    \item \textbf{Hypothesis 4 (Fault Tolerance / Node Churn):} In the event of an abrupt node disconnection midway through training, FedProx will preserve greater consensus stability and diagnostic resilience than FedAvg.''
+\end{itemize}
+\end{tcolorbox}
+
+\textbf{Transition:} \textit{``Let us now examine the formal distributed systems foundations, communication protocols, and mathematical optimization underpinning our architecture.''}
+
+\vspace{0.35cm}\hrule\vspace{0.35cm}
+
+% =====================================================================
+% SLIDE 5
+% =====================================================================
+\section{Slide 5: Distributed Foundations: Protocols \& Optimization}
+\textbf{Slide Title:} \textit{Distributed Foundations: Protocols \& Optimization} \\
+\textbf{Suggested Timing:} 55--65 seconds.
+
+\begin{tcolorbox}[colframe=primaryblue, title=\textbf{Key Distributed Systems Points to Emphasize}]
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Star topology and RPC messages:} Communication governed by \texttt{FitIns} and \texttt{FitRes} primitives.
+    \item \textbf{Synchronous barrier model ($T_{\text{round}}^{(t)}$):} Straggler dynamics in edge networks.
+    \item \textbf{Communication complexity:} Over 98\% traffic reduction by transmitting 32-bit parameters ($B_{\text{round}} = 8Kd$ bytes).
+    \item \textbf{FedProx formulation:} Proximal term $\frac{\mu}{2}\|w - w^{(t)}\|_2^2$ acting as an elastic centripetal force.
+\end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colframe=darkgreen, title=\textbf{What to Say in the Presentation (Literal Script)}]
+``On this slide, we formalize our distributed systems framework and mathematical optimization:
+
+\textbf{1. Distributed Coordination and Networking:}
+\begin{itemize}
+    \item We operate over a \textbf{star topology} where a central coordinator orchestrates worker nodes using two core message primitives: \texttt{FitIns} (fit instruction delivering global weights) and \texttt{FitRes} (fit result returning updated weights and sample counts).
+    \item Communication complexity is reduced by over \textbf{98\%} by transmitting only $8Kd$ bytes per round rather than raw high-resolution foliar photography.
+\end{itemize}
+
+\textbf{2. Optimization Consensus Algorithms:}
+\begin{itemize}
+    \item \textbf{FedAvg (Baseline):} Computes a sample-weighted parameter aggregation: $w^{(t+1)} = \sum \frac{n_k}{n} w_k^{(t+1)}$.
+    \item \textbf{FedProx (Investigated):} Introduces a quadratic proximal penalty $\frac{\mu}{2}\|w - w^{(t)}\|_2^2$. Mathematically, this acts as an `elastic spring' anchoring local client updates to the global centroid, preventing local gradients from collapsing into idiosyncratic local farm optima.''
+\end{itemize}
+\end{tcolorbox}
+
+\textbf{Transition:} \textit{``To understand exactly how synchronization round time is governed, let us break down the barrier latency equation on the next slide.''}
+
+\vspace{0.35cm}\hrule\vspace{0.35cm}
+
+% =====================================================================
+% SLIDE 6
+% =====================================================================
+\section{Slide 6: Understanding the Barrier Latency Formula}
+\textbf{Slide Title:} \textit{Understanding the Barrier Latency Formula} \\
+\textbf{Suggested Timing:} 55--65 seconds.
+
+\begin{tcolorbox}[colframe=primaryblue, title=\textbf{Key Distributed Systems Points to Emphasize}]
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Synchronous barrier synchronization:} Round duration $T_{\text{round}}^{(t)}$.
+    \item \textbf{The $\max$ operator:} The slowest client (straggler) dictates round completion time.
+    \item \textbf{Component breakdown:} Network downlink ($T_{\text{down}}$), local compute ($T_{\text{comp}}$), network uplink ($T_{\text{up}}$), and server aggregation ($T_{\text{agg}}$).
+    \item \textbf{Client compute heterogeneity:} Why GPU vs.\ CPU worker hardware creates straggler bottlenecks.
+\end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colframe=darkgreen, title=\textbf{What to Say in the Presentation (Literal Script)}]
+``On Slide 6, we break down the formal barrier latency equation that governs wall-clock execution time in distributed learning:
+\[ T_{\text{round}}^{(t)} = \max_{k \in \mathcal{K}_t} \left\{ T_{\text{down}}^{(k)} + T_{\text{comp}}^{(k)} + T_{\text{up}}^{(k)} \right\} + T_{\text{agg}} \]
+
+As detailed in the table:
+\begin{itemize}
+    \item $T_{\text{down}}$ and $T_{\text{up}}$ capture the time required to broadcast and upload serialized model parameters over rural WAN links.
+    \item $T_{\text{comp}}$ is the time client $k$ spends executing $E$ local epochs of SGD on its local dataset.
+    \item $T_{\text{agg}}$ is the coordinator's weighted parameter reduction time.
+\end{itemize}
+
+\textbf{The Crucial Insight --- The Straggler Problem:} Notice the mathematical $\max$ operator over the set of participating clients $\mathcal{K}_t$. In a synchronous barrier, the entire round cannot advance until the \textbf{slowest client} finishes. If Farm A has an NVIDIA GPU and finishes local training in 2 seconds, but Farm C runs on a low-power CPU taking 20 seconds, the coordinator is blocked waiting for Farm C. This demonstrates why client hardware heterogeneity directly impacts distributed throughput and why timeout barriers are essential.''
+\end{tcolorbox}
+
+\textbf{Transition:} \textit{``Now, how exactly do we model each farm within distributed systems theory? Let us examine Slide 7.''}
+
+\vspace{0.35cm}\hrule\vspace{0.35cm}
+
+% =====================================================================
+% SLIDE 7
+% =====================================================================
+\section{Slide 7: Farm Nodes as Distributed Compute Nodes}
+\textbf{Slide Title:} \textit{Farm Nodes as Distributed Compute Nodes} \\
+\textbf{Suggested Timing:} 50--60 seconds.
+
+\begin{tcolorbox}[colframe=primaryblue, title=\textbf{Key Distributed Systems Points to Emphasize}]
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Shared-Nothing architecture:} Fully independent memory, storage, and compute.
+    \item \textbf{Local state isolation ($\sigma_k$):} Strict sovereignty and encapsulation.
+    \item \textbf{Independent failure domains (failure isolation):} A crash at Farm A never cascades to Farm B.
+    \item \textbf{Horizontal scalability:} Marginal complexity $\mathcal{O}(Kd)$ without dataset re-partitioning.
+\end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colframe=darkgreen, title=\textbf{What to Say in the Presentation (Literal Script)}]
+``In our theoretical framework, each farm is not merely a data source, but an \textbf{autonomous distributed compute node} under a strict \textbf{\textit{shared-nothing}} architecture:
+
+\textbf{Fundamental Node Properties:}
+\begin{itemize}
+    \item \textbf{Local State Isolation:} Node $k$ maintains a private state tuple $\sigma_k = (w_k, \mathcal{D}_k, n_k, t_k)$ containing its model weights, dataset, sample count, and local round index. No outside node can read or tamper with its internal memory.
+    \item \textbf{Independent Failure Domains:} A power outage or hardware failure at Farm A never compromises the execution of Farm B or C. There is absolute failure isolation across domains.
+    \item \textbf{Stateless Interactions:} From the node's vantage point, each RPC iteration is self-contained, enabling clean hot-restarts and node replacements.
+\end{itemize}
+
+\textbf{Scalability and Relaxed Consensus:}
+Unlike strict consensus protocols such as Raft or Paxos where every write demands synchronized replica locks, federated learning adopts \textbf{optimistic state replication}: nodes advance locally in parallel, and consensus is reached post-hoc during weighted aggregation. Furthermore, enrolling a new node $K+1$ scales horizontally in $\mathcal{O}(Kd)$ time without modifying existing datasets.''
+\end{tcolorbox}
+
+\textbf{Transition:} \textit{``To govern this autonomous node, we formally define its finite state machine and distributed disconnection scenarios.''}
+
+\vspace{0.35cm}\hrule\vspace{0.35cm}
+
+% =====================================================================
+% SLIDE 8
+% =====================================================================
+\section{Slide 8: Node Lifecycle \& Distributed Fault Scenarios}
+\textbf{Slide Title:} \textit{Node Lifecycle \& Distributed Fault Scenarios} \\
+\textbf{Suggested Timing:} 55--65 seconds.
+
+\begin{tcolorbox}[colframe=primaryblue, title=\textbf{Key Distributed Systems Points to Emphasize}]
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Finite State Machine (FSM):} IDLE $\to$ SYNCHRONIZING $\to$ TRAINING $\to$ REPORTING $\to$ PARTITIONED.
+    \item \textbf{Network partitions and stragglers:} Detected via barrier timeout timer $\tau_{\text{timeout}}$.
+    \item \textbf{Majority quorum aggregation:} $|\mathcal{S}_t| \geq \lceil K/2 \rceil + 1$ to prevent split-brain anomalies.
+    \item \textbf{Transparent state catch-up:} Re-synchronization in the subsequent round via direct parameter overwrite.
+\end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colframe=darkgreen, title=\textbf{What to Say in the Presentation (Literal Script)}]
+``This slide details the node lifecycle and distributed fault tolerance mechanisms:
+
+\textbf{1. Finite State Machine (FSM):}
+Each node transitions deterministically through 5 operational states:
+\begin{itemize}
+    \item \textbf{IDLE:} Waiting for incoming coordinator round requests.
+    \item \textbf{SYNCHRONIZING:} Receives $w^{(t)}$ and overwrites its local replica (state synchronization event).
+    \item \textbf{TRAINING:} Computes $E$ local SGD epochs; here local state diverges from the global model (the origin of client drift).
+    \item \textbf{REPORTING:} Serializes updated weights $w_k^{(t+1)}$ into a \texttt{FitRes} message and transmits them.
+    \item \textbf{PARTITIONED:} If network connectivity drops or the host crashes, the node enters a partitioned state.
+\end{itemize}
+
+\textbf{2. Fault Tolerance Mechanics and Quorum:}
+\begin{itemize}
+    \item If a node fails to report before the barrier timeout $\tau_{\text{timeout}}$, the coordinator marks it as disconnected and \textbf{dynamically recalibrates the surviving quorum $\mathcal{S}_t$}.
+    \item We enforce a strict majority quorum $|\mathcal{S}_t| \geq \lceil K/2 \rceil + 1$ (at least 2 out of 3 nodes) to prevent \textit{split-brain} inconsistencies.
+    \item \textbf{Transparent Recovery:} When a disconnected node reconnects in a subsequent round, it performs \textit{state catch-up} simply by pulling the latest global model $w^{(t)}$, completely eliminating the need for expensive distributed replay logs.''
+\end{itemize}
+\end{tcolorbox}
+
+\textbf{Transition:} \textit{``Let us now examine the end-to-end system architecture and how all these physical components interact across the network topology.''}
+
+\vspace{0.35cm}\hrule\vspace{0.35cm}
+
+% =====================================================================
+% SLIDE 9
+% =====================================================================
+\section{Slide 9: Collaborative Farm Network Architecture}
+\textbf{Slide Title:} \textit{Collaborative Farm Network Architecture} \\
+\textbf{Suggested Timing:} 50--60 seconds.
+
+\begin{tcolorbox}[colframe=primaryblue, title=\textbf{Key Distributed Systems Points to Emphasize}]
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Full topology:} Partitioning engine $\to$ Farm Nodes A, B, C $\to$ Central Coordinator.
+    \item \textbf{Explicit message channels:} \texttt{FitIns} (dashed blue broadcast) and \texttt{FitRes} (solid black uplink).
+    \item \textbf{Distributed decoupling:} Strict boundary between private edge datasets and shared global model parameters.
+    \item \textbf{Model consumers:} On-device Edge Inference Engine (Farmer Support Tool) and Distributed Evaluation Suite.
+\end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colframe=darkgreen, title=\textbf{What to Say in the Presentation (Literal Script)}]
+``This architectural diagram summarizes the collaborative distributed network:
+
+\begin{itemize}
+    \item \textbf{On the left:} We ingest the benchmark \textit{PlantVillage} dataset, processed by a controlled partitioning engine that generates local data slices for each farm.
+    \item \textbf{In the center (The 3 Worker Nodes):}
+    \begin{itemize}
+        \item Farm A: Specializing in fungal blights and rusts.
+        \item Farm B: Dominated by bacterial spots.
+        \item Farm C: Representing viral mosaic diseases and healthy control foliage.
+    \end{itemize}
+    \item \textbf{The Federated Coordinator:} Orchestrates barrier synchronization. Dashed blue lines indicate \texttt{FitIns} broadcasts containing global model weights; solid black lines show \texttt{FitRes} responses transmitting trained tensor updates and sample counts.
+    \item \textbf{On the right:} The converged global model serves two endpoints: the centralized evaluation suite and a standalone lightweight edge utility (\textbf{Farmer Support Tool}) for offline field diagnosis.
+\end{itemize}
+\textbf{Core takeaway:} Privacy is strictly maintained: raw leaf images never touch network links; only numerical parameter updates are exchanged.''
+\end{tcolorbox}
+
+\textbf{Transition:} \textit{``To evaluate this architecture with scientific rigor, how do we configure the controlled data partitions, and how does the model calibrate predictions at the edge?''}
+
+\vspace{0.35cm}\hrule\vspace{0.35cm}
+
+% =====================================================================
+% SLIDE 10
+% =====================================================================
+\section{Slide 10: Controlled Non-IID Partitioning \& Edge Calibration}
+\textbf{Slide Title:} \textit{Controlled Non-IID Partitioning \& Edge Support Tool} \\
+\textbf{Suggested Timing:} 50--60 seconds.
+
+\begin{tcolorbox}[colframe=darkgreen, title=\textbf{What to Say in the Presentation (Literal Script)}]
+``This slide highlights two essential methodological components:
+
+\textbf{1. The Four Controlled Partitioning Regimes:}
+To quantify the precise impact of statistical data skew, we implement 4 reproducible partition setups:
+\begin{enumerate}
+    \item \textbf{IID Baseline ($\alpha \to \infty$):} Perfectly balanced distributions ($N/3$ samples with identical class proportions across all farms).
+    \item \textbf{Low Non-IID ($\alpha = 1.0$):} Dirichlet distribution introducing mild inter-node class skew.
+    \item \textbf{Moderate Non-IID ($\alpha = 0.5$):} Dirichlet partition where minority classes account for under 10\% of local data.
+    \item \textbf{High Non-IID (85/15 Disjoint Rule):} Extreme geographic skew where each farm holds 85\% of a specific disease cluster and only 7.5\% of the remaining two.
+\end{enumerate}
+
+\textbf{2. Farmer Support Tool and Edge Calibration:}
+At the edge, standard softmax outputs tend to suffer from miscalibration and overconfidence. We implement \textbf{Temperature Scaling} and assess the \textbf{Expected Calibration Error (ECE)}, ensuring that the farmer receives not merely a raw diagnostic label, but well-calibrated probabilities alongside actionable agronomic advice (such as fungicide treatment or immediate quarantine).''
+\end{tcolorbox}
+
+\textbf{Transition:} \textit{``All of this is systematically evaluated across our 6-track targeted experimental matrix.''}
+
+\vspace{0.35cm}\hrule\vspace{0.35cm}
+
+% =====================================================================
+% SLIDE 11
+% =====================================================================
+\section{Slide 11: Targeted Experimental Matrix (6 Key Tracks)}
+\textbf{Slide Title:} \textit{Targeted Experimental Matrix (6 Systematic Tracks)} \\
+\textbf{Suggested Timing:} 55--65 seconds.
+
+\begin{tcolorbox}[colframe=primaryblue, title=\textbf{Key Distributed Systems Points to Emphasize}]
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Track 4 (Fault tolerance / Node Churn):} Forced crash of Farm C at round $t=5$ and quorum renegotiation.
+    \item \textbf{Track 5 (Communication complexity):} Serialized payload tracking and barrier latency over simulated rural links.
+    \item \textbf{Custom stability metric ($S_{\Delta acc}$):} Standard deviation of inter-round accuracy deltas to quantify convergence smoothness.
+\end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colframe=darkgreen, title=\textbf{What to Say in the Presentation (Literal Script)}]
+``Our experimental matrix encompasses six rigorous evaluation tracks:
+\begin{enumerate}
+    \item \textbf{FedAvg vs. FedProx Optimization:} Comparing convergence rate, global top-1 accuracy, and loss trajectories across rounds.
+    \item \textbf{Impact of Statistical Heterogeneity:} Measuring accuracy degradation as we transition from balanced IID to extreme 85/15 disjoint partitions.
+    \item \textbf{Proximal Parameter Sweep ($\mu$):} Evaluating $\mu \in \{0.001, 0.01, 0.1, 1.0\}$ to pinpoint the sweet spot between drift stability and local learning stagnation.
+    \item \textbf{Fault Tolerance and Node Churn:} \textbf{Our core distributed systems test}: we intentionally disconnect Farm C at round $t=5$ to assess how the coordinator dynamically renormalizes weights from the surviving quorum without service interruption.
+    \item \textbf{Communication Complexity:} Profiling serialized payload volume in megabytes and round barrier latency.
+    \item \textbf{Fairness Across Nodes and Minority Classes:} Evaluating per-class recall to guarantee that smaller farms do not suffer diagnostic marginalization.
+\end{enumerate}
+To rigorously quantify optimization stability, we introduce the formal metric $S_{\Delta acc}$ shown in the footer: lower standard deviation in inter-round accuracy increments indicates a smoother, more predictable distributed convergence.''
+\end{tcolorbox}
+
+\textbf{Transition:} \textit{``Rather than presenting purely conceptual plans, we have already built and empirically validated our distributed transport prototype. Let us examine the preliminary results on Slide 12.''}
+
+\vspace{0.35cm}\hrule\vspace{0.35cm}
+
+% =====================================================================
+% SLIDE 12
+% =====================================================================
+\section{Slide 12: Preliminary Results: RabbitMQ Prototype \& Quorum Validation}
+\textbf{Slide Title:} \textit{Preliminary Results: RabbitMQ Prototype \& Quorum Validation} \\
+\textbf{Suggested Timing:} 60--70 seconds.
+
+\begin{tcolorbox}[colframe=primaryblue, title=\textbf{Key Distributed Systems Points to Emphasize}]
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Real distributed implementation:} Developed and benchmarked in Python and RabbitMQ (AMQP 0-9-1) before running heavy CNN training.
+    \item \textbf{Complete quorum ($K=3$, $N=60$):} Weighted aggregation mathematically verified ($w^{(1)} \approx 2.8333$), with immediate barrier unblocking ($T_{\text{barrier}} \approx 120$\,ms, $T_{\text{agg}} = 12.5$\,ms).
+    \item \textbf{Fault-tolerant dropout ($K=2$, Farm C offline):} Coordinator dynamically re-normalizes without crashing or blocking ($w^{(1)}_{\text{dropout}} \approx 1.6667$), bounded strictly by the fault timeout ($\tau = 3.00$\,s, $T_{\text{agg}} = 8.2$\,ms).
+    \item \textbf{Zero message loss in RabbitMQ:} Durable command queues preserve unconsumed instructions for state catch-up upon reconnection.
+\end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colframe=darkgreen, title=\textbf{What to Say in the Presentation (Literal Script)}]
+``On Slide 12, we present the empirical preliminary results obtained from our fully functional distributed prototype:
+
+Prior to training heavy deep learning backbones, we implemented and validated our coordinator-worker harness using \textbf{RabbitMQ with AMQP 0-9-1} across three isolated client processes.
+
+\textbf{1. Nominal Complete Quorum ($K=3$):}
+\begin{itemize}
+    \item In the nominal scenario, Farm A ($n=10, w=1$), Farm B ($n=20, w=2$), and Farm C ($n=30, w=4$) report on time across total $N=60$ samples.
+    \item The coordinator collects all updates, applies sample-weighted FedAvg, and computes the global weights:
+    \[ w^{(1)} = \frac{10(1) + 20(2) + 30(4)}{60} = \frac{170}{60} \approx \mathbf{2.8333} \]
+    \item From a distributed systems perspective, notice the timing: the barrier unblocks immediately in just \textbf{120 milliseconds}, and the server executes vector reduction in \textbf{12.5 milliseconds} with zero message loss.
+\end{itemize}
+
+\textbf{2. Node Dropout Resilience ($K=2$, Farm C down):}
+\begin{itemize}
+    \item In our second benchmark, we injected a fail-stop network failure on Farm C.
+    \item Instead of deadlocking, the coordinator barrier is strictly bounded by the fault timeout ($\tau = \mathbf{3.00\text{ seconds}}$). It detects that the responsive subset meets our minimum quorum threshold ($|\mathcal{S}_t| \ge 2$), and dynamically re-normalizes weights across Farms A and B:
+    \[ w^{(1)}_{\text{dropout}} = \frac{10(1) + 20(2)}{30} = \frac{50}{30} \approx \mathbf{1.6667} \]
+    \item The partial aggregation took only \textbf{8.2 milliseconds}. Crucially, RabbitMQ broker inspection confirmed that Farm C's command was not dropped: it remained safely buffered in its durable queue, guaranteeing that when Farm C reconnects, it performs zero-overhead \textbf{state catch-up}.''
+\end{itemize}
+\end{tcolorbox}
+
+\textbf{Transition:} \textit{``This empirical verification proves our distributed mechanics work in practice. Let us now examine how distributed systems theory directly governs this architecture.''}
+
+\vspace{0.35cm}\hrule\vspace{0.35cm}
+
+% =====================================================================
+% SLIDE 13
+% =====================================================================
+\section{Slide 13: Distributed Systems Theory in Federated Agriculture}
+\textbf{Slide Title:} \textit{Distributed Systems Theory in Federated Agriculture} \\
+\textbf{Suggested Timing:} 60--70 seconds.
+
+\begin{tcolorbox}[colframe=primaryblue, title=\textbf{Key Distributed Systems Points to Emphasize}]
+\begin{itemize}[leftmargin=*]
+    \item \textbf{CAP Theorem (Brewer, 2000):} Architectural design favoring \textbf{AP} (Availability + Partition Tolerance) with eventual consistency.
+    \item \textbf{RabbitMQ AMQP 0-9-1 Messaging:} Durable exchanges, persistent command queues, manual acks (\texttt{FitIns}, \texttt{FitRes}).
+    \item \textbf{Lamport Causal Ordering ($\prec$):} $\text{broadcast} \prec \text{train}_k \prec \text{upload} \prec \text{aggregate}$.
+    \item \textbf{Duplicate Suppression and Idempotent Aggregation:} Unique round identifiers preventing duplicate aggregation bias.
+\end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colframe=darkgreen, title=\textbf{What to Say in the Presentation (Literal Script)}]
+``This slide bridges our empirical design with core theorems of Distributed Systems theory:
+
+\textbf{1. Brewer's CAP Theorem:}
+Given unavoidable rural network partitions (P), distributed systems must trade off strict consistency (C) against continuous availability (A).
+\begin{itemize}
+    \item Our federated network deliberately adopts an \textbf{AP (Availability + Partition Tolerance) architecture}.
+    \item Each farm prioritizes local availability to continue diagnostic inference and local model training even in disconnected offline mode.
+    \item Rather than demanding immediate strong consistency (linearizability), the system converges toward \textbf{Eventual Consistency} across consecutive federated synchronization rounds.
+\end{itemize}
+
+\textbf{2. Message Passing, Logical Clocks, and Network Semantics:}
+\begin{itemize}
+    \item We utilize RabbitMQ (AMQP 0-9-1) with durable exchanges and persistent queues to decouple farm execution from coordinator network sessions.
+    \item Execution follows \textbf{Lamport's causal ordering} ($\prec$), strictly observing: broadcast $\prec$ local training $\prec$ upload $\prec$ global aggregation.
+    \item To prevent network retransmissions from duplicating weight updates and biasing aggregation, we enforce \textbf{duplicate suppression} with monotonic round IDs, guaranteeing that server aggregation is strictly \textbf{idempotent and deterministic}.''
+\end{itemize}
+\end{tcolorbox}
+
+\textbf{Transition:} \textit{``Now, let us examine how we translate this architecture into high-performance software and concrete engineering deliverables.''}
+
+\vspace{0.35cm}\hrule\vspace{0.35cm}
+
+% =====================================================================
+% SLIDE 14
+% =====================================================================
+\section{Slide 14: Deliverables \& Academic Architecture Strategy}
+\textbf{Slide Title:} \textit{Deliverables \& Academic Architecture Strategy} \\
+\textbf{Suggested Timing:} 50--60 seconds.
+
+\begin{tcolorbox}[colframe=primaryblue, title=\textbf{Key Distributed Systems Points to Emphasize}]
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Strict modular separation:} Distributed federated simulation (Python/PyTorch/RabbitMQ) vs. Edge inference engine (C++).
+    \item \textbf{C++ Runtime with ONNX Runtime:} Zero Python runtime dependencies on edge hardware; sub-50 ms latency.
+    \item \textbf{Open-source and reproducible:} GitHub repository with end-to-end automation scripts.
+\end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colframe=darkgreen, title=\textbf{What to Say in the Presentation (Literal Script)}]
+``Our engineering roadmap cleanly decouples the system lifecycle into two modular components:
+
+\begin{enumerate}
+    \item \textbf{Distributed Federated Simulation Pipeline:} Built in \textbf{Python, PyTorch, and RabbitMQ (AMQP 0-9-1)}. It manages multi-process worker concurrency, AMQP serialization, barrier timeouts, and the synthetic Non-IID partitioning suite.
+    \item \textbf{High-Performance C++ Edge Diagnostic Engine:}
+    \begin{itemize}
+        \item Following federated convergence, the global model is exported and compiled into optimized formats: \textbf{ONNX and TorchScript}.
+        \item The model executes inside a native binary utilizing the \textbf{ONNX Runtime C++ API}.
+        \item This completely strips away the Python runtime from field devices, allowing deployment on resource-constrained hardware such as Raspberry Pi boards or IoT agricultural gateways with deterministic latencies under \textbf{50 milliseconds}.
+    \end{itemize}
+\end{enumerate}
+
+All codebase components, experiment configurations, and reproduction pipelines are versioned and openly accessible on GitHub.''
+\end{tcolorbox}
+
+\textbf{Transition:} \textit{``To ensure complete project feasibility, let us look at our 14-week execution schedule and open reproducibility protocol on Slide 15.''}
+
+\vspace{0.35cm}\hrule\vspace{0.35cm}
+
+% =====================================================================
+% SLIDE 15
+% =====================================================================
+\section{Slide 15: Project Feasibility, Work Schedule \& Reproducibility}
+\textbf{Slide Title:} \textit{Project Feasibility, Work Schedule \& Reproducibility} \\
+\textbf{Suggested Timing:} 50--60 seconds.
+
+\begin{tcolorbox}[colframe=primaryblue, title=\textbf{Key Points to Emphasize}]
+\begin{itemize}[leftmargin=*]
+    \item \textbf{14-week timeline structured in 6 phases:} Phases 1 and 2 completed; Phase 3 currently in progress.
+    \item \textbf{Open-science reproducibility:} Public GitHub repository with deterministic seeds (\texttt{seed=42}) and automated unit test suite.
+\end{itemize}
+\end{tcolorbox}
+
+\begin{tcolorbox}[colframe=darkgreen, title=\textbf{What to Say in the Presentation (Literal Script)}]
+``On Slide 15, we demonstrate the concrete feasibility and reproducibility of our research:
+
+\textbf{1. 14-Week Milestone Timeline:}
+The project is organized into 6 clearly bounded phases:
+\begin{itemize}
+    \item \textbf{Phase 1 (AMQP Prototype) and Phase 2 (Dirichlet Sharding)} are already completed and verified.
+    \item We are currently in \textbf{Phase 3}, integrating the PyTorch FedAvg and FedProx training loops.
+    \item The upcoming weeks cover the systematic execution of our 6 experimental tracks, edge ONNX compilation, and final camera-ready report authoring.
+\end{itemize}
+
+\textbf{2. Feasibility and Open-Science Reproducibility:}
+\begin{itemize}
+    \item \textbf{Code Availability:} All code, configs, and unit tests are publicly hosted at \url{https://github.com/darioXxx32/IA}.
+    \item \textbf{Deterministic Execution:} All pseudo-random generators use fixed seeds (\texttt{seed=42}), enabling complete one-command verification via \texttt{test\_protocol.py} and \texttt{run\_demo.py}.''
+\end{itemize}
+\end{tcolorbox}
+
+\textbf{Transition:} \textit{``What are the immediate milestones to complete the final scientific report? Let us review the roadmap on Slide 16.''}
+
+\vspace{0.35cm}\hrule\vspace{0.35cm}
+
+% =====================================================================
+% SLIDE 16
+% =====================================================================
+\section{Slide 16: Expected Contribution \& Roadmap for Final Report}
+\textbf{Slide Title:} \textit{Roadmap for Final Report \& Expected Contributions} \\
+\textbf{Suggested Timing:} 45--55 seconds.
+
+\begin{tcolorbox}[colframe=darkgreen, title=\textbf{What to Say in the Presentation (Literal Script)}]
+``Our roadmap toward the final scientific report spans five concrete milestones:
+\begin{enumerate}
+    \item Execute the complete 6-track experimental matrix across the \textit{PlantVillage} partitions across all Non-IID regimes.
+    \item Finalize the systematic $\mu$ parameter sweep over $\{0.001, 0.01, 0.1, 1.0\}$, compiling Macro-F1 scores, per-node confusion matrices, and the $S_{\Delta acc}$ stability metric.
+    \item Conduct the node churn fault injection experiment at round $t=5$ to validate quorum rebalancing and consensus resilience.
+    \item Compile the standalone C++ ONNX Runtime binary and polish the interactive command-line interface (CLI) for field agronomists.
+    \item Author the final 8-to-15-page scientific paper adhering to required MDPI journal formatting standards (\textit{Agronomy} / \textit{Applied Sciences}).
+\end{enumerate}
+
+\textbf{Our Primary Contribution:} To formally demonstrate how distributed systems principles combined with FedProx's proximal regularization simultaneously solve data sovereignty, bandwidth bottlenecks, and diagnostic fairness in highly fragmented agricultural settings.''
+\end{tcolorbox}
+
+\textbf{Transition:} \textit{``With this, I conclude my presentation and open the floor for discussion.''}
+
+\vspace{0.35cm}\hrule\vspace{0.35cm}
+
+% =====================================================================
+% SLIDE 17
+% =====================================================================
+\section{Slide 17: Conclusion \& Q\&A}
+\textbf{Slide Title:} \textit{Conclusion} \\
+\textbf{Suggested Timing:} 35--45 seconds.
+
+\begin{tcolorbox}[colframe=primaryblue, title=\textbf{Strong Closing and Opening for Questions (Literal Script)}]
+``In conclusion:
+
+This project demonstrates that Federated Learning not only protects commercial data privacy and saves over 98\% of rural network bandwidth, but---by incorporating FedProx's elastic consensus and the partition tolerance of the CAP theorem---enables agricultural cooperatives across distinct geographic realities to collaborate as a truly resilient, equitable distributed system.
+
+Thank you very much for your time and attention. I am now open to your questions and feedback to enrich this project.''
+\end{tcolorbox}
+
+\vspace{0.6cm}
+\begin{tcolorbox}[colframe=accentorange, title=\textbf{Tips for the Q\&A Session}]
+\begin{itemize}[leftmargin=*]
+    \item \textbf{If they ask about RabbitMQ:} Highlight that RabbitMQ with AMQP 0-9-1 provides durable message queues and manual acknowledgments, buffering round instructions for offline farms and decoupling local training time from coordinator network sessions.
+    \item \textbf{If they ask why 3 nodes:} Explain that 3 nodes represents the canonical minimal setup to model geographic diversity (Valley, Highland, Lowland), investigate majority quorum consensus ($2/3$), and withstand a single node crash without triggering symmetric network partitioning.
+    \item \textbf{If they ask why C++ for the edge:} Emphasize energy efficiency, minimal RAM footprint, and deterministic sub-50ms latency on low-power IoT gateways where a Python runtime is too resource-heavy.
+    \item \textbf{If they ask about Byzantine Fault Tolerance:} Clarify that this proposal assumes an honest crash-stop failure model, and that Byzantine-robust aggregators (such as Krum or Trimmed-Mean) constitute promising future research extensions.
+\end{itemize}
+\end{tcolorbox}
+
+\end{document}

@@ -1,0 +1,10 @@
+Python syntax: PASS (4 of 4 scripts compiled with py_compile).
+C build: PASS (Ubuntu 24.04 Docker image, librabbitmq-dev 0.11.0-1ubuntu0.2; make compiled producer and consumer).
+C runtime: PASS (consumer received Hello from C! and acknowledged delivery).
+
+python-basic/producer.py	580 bytes	SHA256 3c0e0c2717fc17edcaa975cdba7b96dc78ffce09c58d4f4379baba5ad24c3e5f
+python-basic/consumer.py	760 bytes	SHA256 b27b4465ed3c47fa794eebfab0485ecf5f92cb739e82f3445adc7b9ea62fd3e9
+python-pubsub/pub.py	461 bytes	SHA256 55cb14cb925e03000b354064fa207873555e00413093de45b22ad812203d281b
+python-pubsub/sub.py	677 bytes	SHA256 fb8ac28dc03f922f243d5e4f50b86e8a44e79903e0bfdd0efc857bf32879761d
+c-basic/c_producer.c	2274 bytes	SHA256 2fff97a9716dbba98dff347b5809ec600cdbb9b8e48473de06dd93a2df9b1d4d
+c-basic/c_consumer.c	2403 bytes	SHA256 c9de33bd25e6721749f33363bcc6debff5c537fe254a6fd43d891a5ea69e63ae

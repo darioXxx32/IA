@@ -1,0 +1,8 @@
+test_rejects_different_tensor_shapes (test_protocol.FedAvgProtocolTests.test_rejects_different_tensor_shapes) ... ok
+test_rejects_non_positive_sample_count (test_protocol.FedAvgProtocolTests.test_rejects_non_positive_sample_count) ... ok
+test_sample_weighted_average (test_protocol.FedAvgProtocolTests.test_sample_weighted_average) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.000s
+
+OK

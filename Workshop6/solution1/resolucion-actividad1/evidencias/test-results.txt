@@ -1,0 +1,10 @@
+=== Python syntax ===
+PASS: all four scripts compiled.
+=== RabbitMQ AMQP connectivity ===
+PASS: Pika connected to localhost:5672.
+=== Python queue ===
+PASS: Hello Middleware! published; Python consumer received and acknowledged it.
+=== Python fanout ===
+PASS: two independent subscriber queues received the same broadcast.
+=== C build and queue ===
+PASS: Ubuntu image installed librabbitmq-dev 0.11.0-1ubuntu0.2; make built both C programs; C consumer received Hello from C!.

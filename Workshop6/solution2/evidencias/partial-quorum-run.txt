@@ -1,0 +1,10 @@
+[farm-a] READY; waiting for round command
+[farm-b] READY; waiting for round command
+[farm-a] received round=r1-f6ebc5bd90
+[farm-a] published update; command acknowledged
+[farm-b] received round=r1-f6ebc5bd90
+[farm-b] published update; command acknowledged
+[coordinator] dispatched round=r1-f6ebc5bd90 to ['farm-a', 'farm-b', 'farm-c']
+[coordinator] accepted farm-a: n=10
+[coordinator] accepted farm-b: n=20
+[coordinator] result={"algorithm": "FedAvg", "expected": 3, "global_weights": [1.6666666666666667], "initial_weights": [0.0], "participants": ["farm-a", "farm-b"], "quorum": 2, "received": 2, "round": 1, "round_id": "r1-f6ebc5bd90", "sample_count": 30, "status": "partial_quorum"}

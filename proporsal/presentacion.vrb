@@ -1,0 +1,30 @@
+\frametitle{Why is Federated Learning a Distributed Systems Problem?}
+\textbf{The Architectural Shift:} Data is physically decoupled and decentralized.
+    \begin{columns}
+        \begin{column}{0.45\textwidth}
+            \textbf{Core Distributed Challenges:}
+            \begin{itemize}
+                \item \textbf{Decentralized Ownership:} Data never leaves the edge node.
+                \item \textbf{Network Consensus:} Aggregating local states into a Global Model.
+                \item \textbf{Heterogeneity:} Nodes have different data distributions (Non-IID).
+            \end{itemize}
+        \end{column}
+        \begin{column}{0.5\textwidth}
+            \begin{exampleblock}{Decentralized Topology}
+\begin{verbatim}
+    DATA A       DATA B       DATA C
+      |            |            |
+      v            v            v
+  CLIENT 1     CLIENT 2     CLIENT 3
+      |            |            |
+      +------------+------------+
+                   |
+                   v
+             CENTRAL SERVER
+                   |
+                   v
+              GLOBAL MODEL
+\end{verbatim}
+            \end{exampleblock}
+        \end{column}
+    \end{columns}

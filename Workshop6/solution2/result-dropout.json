@@ -1,0 +1,20 @@
+{
+  "round_id": "r1-f6ebc5bd90",
+  "round": 1,
+  "algorithm": "FedAvg",
+  "participants": [
+    "farm-a",
+    "farm-b"
+  ],
+  "received": 2,
+  "expected": 3,
+  "quorum": 2,
+  "initial_weights": [
+    0.0
+  ],
+  "global_weights": [
+    1.6666666666666667
+  ],
+  "sample_count": 30,
+  "status": "partial_quorum"
+}
