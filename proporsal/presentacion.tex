@@ -146,13 +146,13 @@
         \begin{column}{0.49\textwidth}
             \textbf{Distributed Coordination Principles:}
             \begin{itemize}\footnotesize
-                \item \textbf{Star Topology \& RPC:} Coordinator orchestrates workers via gRPC messages (\texttt{FitIns}, \texttt{FitRes}).
+                \item \textbf{Star Topology \& Message Passing:} The coordinator sends \texttt{FitIns} and receives \texttt{FitRes} through RabbitMQ (AMQP 0-9-1).
                 \item \textbf{Barrier Latency Model:}
                 {\scriptsize
                 \[
                 T_{\text{round}}^{(t)} = \max_{k \in \mathcal{K}_t} \{T_{\text{down}}^{(k)} + T_{\text{comp}}^{(k)} + T_{\text{up}}^{(k)}\} + T_{\text{agg}}
                 \]}
-                \item \textbf{Communication Complexity:} Exchanging serialized weights ($B_{\text{round}} = 8Kd$ bytes) reduces network payload by \textbf{$>98\%$} vs.\ raw image transmission.
+                \item \textbf{Communication Complexity:} Model-update payload depends on model size and serialization format; I plan to measure it per round and compare it with the image-data baseline.
             \end{itemize}
         \end{column}
         \begin{column}{0.49\textwidth}
@@ -256,7 +256,7 @@
             \textbf{Node State Machine (per Farm):}
             \vspace{0.1cm}
             \begin{enumerate}
-                \item \textbf{IDLE} --- Awaiting \texttt{FitIns} RPC.
+                \item \textbf{IDLE} --- Awaiting a \texttt{FitIns} message.
                 \item \textbf{SYNCHRONIZING} --- Deserializing $w^{(t)}$; overwriting local replica.
                 \item \textbf{TRAINING} --- Executing $E$ local SGD epochs; state \textit{diverges} from global.
                 \item \textbf{REPORTING} --- Serializing $w_k^{(t+1)}$ into \texttt{FitRes}; uploading to coordinator.
@@ -275,7 +275,7 @@
                 w^{(t+1)} = \sum_{k \in \mathcal{S}_t} \frac{n_k}{\sum_{j \in \mathcal{S}_t} n_j} w_k^{(t+1)}
                 \]
                 }
-                \item \textbf{Majority Quorum:} $|\mathcal{S}_t| \geq \lceil K/2 \rceil + 1$ prevents split-brain divergence.
+                \item \textbf{Quorum Boundary:} A minimum response count lets this coordinator decide whether to aggregate; it does not provide consensus or prevent split brain if the coordinator fails.
                 \item \textbf{Byzantine Awareness:} Crash-stop model assumed; Krum/trimmed-mean aggregation supports $f < K/3$ malicious nodes (future work).
             \end{itemize}
         \end{column}
@@ -307,7 +307,7 @@
     \node[client, below=0.5cm of c2] (c3) {\textbf{Farm C (Worker 3)}\\Local Foliar Shard\\Dominant: Virus / Healthy};
 
     % Server
-    \node[server, right=1.3cm of c2] (server) {\textbf{Coordinator Server}\\RPC Barrier Orchestration\\FedAvg / FedProx ($\mu$ penalty)};
+    \node[server, right=1.3cm of c2] (server) {\textbf{Coordinator Server}\\RabbitMQ / AMQP Round Handling\\FedAvg / FedProx ($\mu$ penalty)};
 
     % App & Evaluation
     \node[app, above right=0.3cm and 1.1cm of server] (app) {\textbf{Farmer Support Tool}\\Edge Diagnostic Inference:\\Class + Calibrated Conf.};
@@ -401,18 +401,18 @@
 % Slide 12: Preliminary Results: RabbitMQ Prototype & Quorum Validation
 % =====================================================================
 \begin{frame}{Preliminary Results: RabbitMQ Prototype \& Quorum Validation}
-    \textbf{Empirical Verification of Distributed Coordinator-Worker Prototype:}
+    \textbf{Workshop 6 protocol smoke tests (synthetic scalar updates; no CNN training):}
     \vspace{0.05cm}
     \begin{center}
     \scriptsize
     \setlength{\tabcolsep}{3.5pt}
     \renewcommand{\arraystretch}{1.2}
-    \begin{tabular}{@{} l c c c c p{3.4cm} @{}}
+    \begin{tabular}{@{} l c c c c p{3.5cm} @{}}
         \toprule
-        \textbf{Scenario} & \textbf{Quorum} & \textbf{Samples} & \textbf{Global $w^{(1)}$} & \textbf{Barrier Latency ($T$)} & \textbf{Queue State \& Behavior} \\
+        \textbf{Scenario} & \textbf{Quorum} & \textbf{Samples} & \textbf{Global $w^{(1)}$} & \textbf{Configured Deadline} & \textbf{Observed Outcome} \\
         \midrule
-        \textbf{Complete Round} & $3/3$ & $N{=}60$ & \textbf{2.8333} & \textbf{120 ms} ($T_{\text{agg}}{=}12.5$\,ms) & Queues drained; manual acks confirmed. \\
-        \textbf{Node Dropout} & $2/3$ & $N{=}30$ & \textbf{1.6667} & \textbf{3.00 s} ($\tau$ timeout barrier) & Dynamic re-weighting; C task queued. \\
+        \textbf{Complete Round} & $3/3$ & $N{=}60$ & \textbf{2.8333} & 10 s configured & All three updates accepted; complete-quorum status. \\
+        \textbf{Farm C Offline} & $2/3$ & $N{=}30$ & \textbf{1.6667} & 3 s configured & Partial quorum accepted; Farm C command remained queued. \\
         \bottomrule
     \end{tabular}
     \end{center}
@@ -424,8 +424,7 @@
                 \[
                 w^{(1)} = \frac{10(1) + 20(2) + 30(4)}{60} = \frac{170}{60} \approx \mathbf{2.8333}
                 \]
-                \textbf{Barrier Latency:} $T_{\text{barrier}} \approx 120$\,ms; $T_{\text{agg}} = 12.5$\,ms.\\
-                Unblocks immediately upon complete quorum.
+                All three synthetic updates were received and aggregated. The saved JSON records the weighted result; elapsed time was not recorded.
             \end{exampleblock}
         \end{column}
         \begin{column}{0.48\textwidth}
@@ -434,8 +433,7 @@
                 \[
                 w^{(1)}_{\text{dropout}} = \frac{10(1) + 20(2)}{30} = \frac{50}{30} \approx \mathbf{1.6667}
                 \]
-                \textbf{Barrier Latency:} $T_{\text{barrier}} = 3.00$\,s (fault detection via $\tau$).\\
-                $T_{\text{agg}} = 8.2$\,ms; coordinator advances without deadlock.
+                Two updates met the configured minimum quorum. The saved log shows Farm C's command still queued; no elapsed time was recorded.
             \end{alertblock}
         \end{column}
     \end{columns}
@@ -480,12 +478,12 @@
 \begin{frame}{Deliverables \& Academic Architecture Strategy}
     \textbf{Software Pipeline \& Modular Separation:}
     \begin{itemize}
-        \item \textbf{Distributed Training Simulation:} Implemented in \textbf{Python}, \textbf{PyTorch}, and \textbf{RabbitMQ (AMQP 0-9-1)} for multi-process worker execution, state serialization, and non-IID partitioning.
+        \item \textbf{Middleware Prototype (Workshop 6):} Implemented in \textbf{Python} with \textbf{RabbitMQ (AMQP 0-9-1)} to test multi-process messages and synthetic FedAvg updates. PlantVillage processing and CNN training are planned next steps.
         \item \textbf{Edge Diagnostic Engine (High-Efficiency C++ Deployment):}
         \begin{itemize}
-            \item Trained global CNN exported via \textbf{ONNX} / \textbf{TorchScript}.
-            \item Standalone inference runtime using \textbf{ONNX Runtime C++ API} / LibTorch.
-            \item Zero Python dependencies on edge device: deploys natively on Raspberry Pi or agricultural field gateways with sub-50ms inference latency.
+            \item \textbf{Planned:} export a trained global CNN via \textbf{ONNX} / \textbf{TorchScript}.
+            \item \textbf{Planned:} standalone inference runtime using \textbf{ONNX Runtime C++ API} / LibTorch.
+            \item Target: test native inference on a Raspberry Pi or field gateway; sub-50 ms is a goal to measure, not a current result.
         \end{itemize}
     \end{itemize}
     \vspace{0.25cm}
@@ -509,9 +507,9 @@
         \toprule
         \textbf{Phase} & \textbf{Milestone \& Core Activities} & \textbf{Weeks} & \textbf{Status} \\
         \midrule
-        \textbf{Phase 1} & AMQP RabbitMQ Middleware, Quorum \& Unit Tests & W1--3 & \textbf{Completed} \\
-        \textbf{Phase 2} & PlantVillage Dirichlet Partitioning ($\alpha \in \{\infty, 1.0, 0.5, \text{disjoint}\}$) & W4--5 & \textbf{Completed} \\
-        \textbf{Phase 3} & CNN Architecture \& PyTorch FedAvg/FedProx Loops & W6--7 & \textbf{In Progress} \\
+        \textbf{Phase 1} & RabbitMQ Middleware and Synthetic Coordinator-Worker Tests & W1--3 & \textbf{Completed (Workshop 6)} \\
+        \textbf{Phase 2} & PlantVillage Acquisition and Dirichlet Partitioning & W4--5 & \textbf{Planned} \\
+        \textbf{Phase 3} & CNN Baseline and PyTorch FedAvg/FedProx Loops & W6--7 & \textbf{Planned} \\
         \textbf{Phase 4} & Systematic Benchmark of 6 Tracks ($\mu$ sweep, node dropout) & W8--10 & Planned \\
         \textbf{Phase 5} & ONNX Edge Compilation \& Calibrated Advisory CLI & W11--12 & Planned \\
         \textbf{Phase 6} & Comparative Analysis \& Camera-Ready Scientific Report & W13--14 & Planned \\
@@ -522,7 +520,7 @@
     \begin{block}{Open-Science Reproducibility \& Codebase}
         \scriptsize
         \textbf{Codebase Repository:} \url{https://github.com/darioXxx32/IA}\\
-        \textbf{Protocol:} Deterministic seeds (\texttt{seed=42}) and automated unit test suite (\texttt{test\_protocol.py}).
+        \textbf{Current tests:} Synthetic deterministic updates and unit checks (\texttt{test\_protocol.py}); no CNN/data experiment has been run yet.
     \end{block}
 \end{frame}
 

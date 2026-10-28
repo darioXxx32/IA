@@ -379,15 +379,15 @@ To rigorously quantify optimization stability, we introduce the formal metric $S
 
 \begin{tcolorbox}[colframe=primaryblue, title=\textbf{Key Distributed Systems Points to Emphasize}]
 \begin{itemize}[leftmargin=*]
-    \item \textbf{Real distributed implementation:} Developed and benchmarked in Python and RabbitMQ (AMQP 0-9-1) before running heavy CNN training.
-    \item \textbf{Complete quorum ($K=3$, $N=60$):} Weighted aggregation mathematically verified ($w^{(1)} \approx 2.8333$), with immediate barrier unblocking ($T_{\text{barrier}} \approx 120$\,ms, $T_{\text{agg}} = 12.5$\,ms).
-    \item \textbf{Fault-tolerant dropout ($K=2$, Farm C offline):} Coordinator dynamically re-normalizes without crashing or blocking ($w^{(1)}_{\text{dropout}} \approx 1.6667$), bounded strictly by the fault timeout ($\tau = 3.00$\,s, $T_{\text{agg}} = 8.2$\,ms).
-    \item \textbf{Zero message loss in RabbitMQ:} Durable command queues preserve unconsumed instructions for state catch-up upon reconnection.
+    \item \textbf{Protocol smoke test:} I implemented a Python/RabbitMQ coordinator-worker prototype using synthetic scalar updates; it does not train a CNN.
+    \item \textbf{Complete quorum ($K=3$, $N=60$):} The coordinator accepted three updates and recorded the weighted result $w^{(1)} \approx 2.8333$ in the JSON output.
+    \item \textbf{Farm C offline ($K=2$):} The coordinator accepted Farms A and B and recorded $w^{(1)}_{\text{partial}} \approx 1.6667$; Farm C's command remained in its durable queue.
+    \item The demo configures a 3-second deadline for the partial-quorum run, but the saved output does not record elapsed time. I do not report latency or CNN accuracy from this test.
 \end{itemize}
 \end{tcolorbox}
 
 \begin{tcolorbox}[colframe=darkgreen, title=\textbf{What to Say in the Presentation (Literal Script)}]
-``On Slide 12, we present the empirical preliminary results obtained from our fully functional distributed prototype:
+``On Slide 12, I present my preliminary RabbitMQ protocol tests from Workshop 6. These tests use synthetic scalar updates to check message delivery and sample-weighted aggregation; they do not train a CNN or use PlantVillage.
 
 Prior to training heavy deep learning backbones, we implemented and validated our coordinator-worker harness using \textbf{RabbitMQ with AMQP 0-9-1} across three isolated client processes.
 
@@ -396,19 +396,19 @@ Prior to training heavy deep learning backbones, we implemented and validated ou
     \item In the nominal scenario, Farm A ($n=10, w=1$), Farm B ($n=20, w=2$), and Farm C ($n=30, w=4$) report on time across total $N=60$ samples.
     \item The coordinator collects all updates, applies sample-weighted FedAvg, and computes the global weights:
     \[ w^{(1)} = \frac{10(1) + 20(2) + 30(4)}{60} = \frac{170}{60} \approx \mathbf{2.8333} \]
-    \item From a distributed systems perspective, notice the timing: the barrier unblocks immediately in just \textbf{120 milliseconds}, and the server executes vector reduction in \textbf{12.5 milliseconds} with zero message loss.
+    \item The saved JSON records that all three updates were accepted and that the aggregate was about 2.8333. I did not record elapsed time for this run.
 \end{itemize}
 
 \textbf{2. Node Dropout Resilience ($K=2$, Farm C down):}
 \begin{itemize}
-    \item In our second benchmark, we injected a fail-stop network failure on Farm C.
-    \item Instead of deadlocking, the coordinator barrier is strictly bounded by the fault timeout ($\tau = \mathbf{3.00\text{ seconds}}$). It detects that the responsive subset meets our minimum quorum threshold ($|\mathcal{S}_t| \ge 2$), and dynamically re-normalizes weights across Farms A and B:
+    \item For the partial-quorum run, I left Farm C's worker process offline while the coordinator still published its command.
+    \item Farms A and B met the configured quorum of 2, and the coordinator re-normalized their weights:
     \[ w^{(1)}_{\text{dropout}} = \frac{10(1) + 20(2)}{30} = \frac{50}{30} \approx \mathbf{1.6667} \]
-    \item The partial aggregation took only \textbf{8.2 milliseconds}. Crucially, RabbitMQ broker inspection confirmed that Farm C's command was not dropped: it remained safely buffered in its durable queue, guaranteeing that when Farm C reconnects, it performs zero-overhead \textbf{state catch-up}.''
+    \item The broker screenshot shows Farm C's command still queued. This confirms queue retention in this run; I have not tested Farm C reconnecting or measured aggregation latency.''
 \end{itemize}
 \end{tcolorbox}
 
-\textbf{Transition:} \textit{``This empirical verification proves our distributed mechanics work in practice. Let us now examine how distributed systems theory directly governs this architecture.''}
+\textbf{Transition:} \textit{``These smoke tests give me preliminary evidence about message flow and aggregation. I will next explain the distributed-systems principles behind the proposed architecture.''}
 
 \vspace{0.35cm}\hrule\vspace{0.35cm}
 
@@ -506,9 +506,9 @@ All codebase components, experiment configurations, and reproduction pipelines a
 \textbf{1. 14-Week Milestone Timeline:}
 The project is organized into 6 clearly bounded phases:
 \begin{itemize}
-    \item \textbf{Phase 1 (AMQP Prototype) and Phase 2 (Dirichlet Sharding)} are already completed and verified.
-    \item We are currently in \textbf{Phase 3}, integrating the PyTorch FedAvg and FedProx training loops.
-    \item The upcoming weeks cover the systematic execution of our 6 experimental tracks, edge ONNX compilation, and final camera-ready report authoring.
+    \item \textbf{Phase 1 (AMQP prototype)} is complete as documented in Workshop 6.
+    \item \textbf{Phase 2 (PlantVillage partitioning)} and \textbf{Phase 3 (CNN/FedAvg/FedProx training)} are planned; I have not run them yet.
+    \item Later phases will cover the six proposed experiments, edge ONNX compilation, and final report.
 \end{itemize}
 
 \textbf{2. Feasibility and Open-Science Reproducibility:}

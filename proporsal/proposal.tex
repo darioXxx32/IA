@@ -156,7 +156,7 @@ Collaborative Federated Learning overcomes these barriers by allowing agricultur
 \end{itemize}
 
 \subsection{Organization of the Article}
-The remainder of this article is organized according to the required MDPI research article format: Section~\ref{sec:related_work} (Related Work and Theoretical Framework) details the theoretical foundations of federated optimization, client drift, distributed message-passing principles, and related literature positioning. Section~\ref{sec:materials_methods} (Materials and Methods) delineates the PlantVillage pathology benchmark, controlled Dirichlet partitioning engines, RabbitMQ-based broker architecture, operational communication protocols, edge calibration modules, and the experimental evaluation suite. Section~\ref{sec:preliminary_results} (Preliminary Results) presents the empirical validation of the distributed coordinator-worker prototype, detailing nominal versus dropout quorum benchmarks and timing profiles. Section~\ref{sec:discussion} (Discussion and Expected Research Direction) analyzes anticipated dynamics, distributed system trade-offs, feasibility milestones, and reproducibility protocols. Finally, MDPI back-matter statements and complete bibliographic references are provided.
+The remainder of this article is organized according to the required MDPI research article format: Section~\ref{sec:related_work} (Related Work and Theoretical Framework) details the theoretical foundations of federated optimization, client drift, distributed message-passing principles, and related literature positioning. Section~\ref{sec:materials_methods} (Materials and Methods) delineates the planned PlantVillage pathology benchmark, controlled Dirichlet partitioning, RabbitMQ-based broker architecture, operational communication protocols, edge calibration modules, and experimental evaluation suite. Section~\ref{sec:preliminary_results} (Preliminary Results) reports the available protocol-level coordinator-worker smoke tests using synthetic updates; CNN training and model-performance experiments remain future work. Section~\ref{sec:discussion} (Discussion and Expected Research Direction) analyzes anticipated dynamics, distributed system trade-offs, feasibility milestones, and reproducibility protocols. Finally, MDPI back-matter statements and complete bibliographic references are provided.
 
 % =====================================================================
 %  2. RELATED WORK AND THEORETICAL FRAMEWORK
@@ -563,7 +563,7 @@ The experimental framework will incorporate both statistical machine learning an
 \label{sec:preliminary_results}
 
 \subsection{Distributed Coordinator-Worker Prototype Implementation}
-Prior to executing full-scale convolutional neural network training on agricultural benchmarks, a fully functioning distributed coordinator-worker prototype was implemented and experimentally validated using RabbitMQ (AMQP~0-9-1) and Python. The objective of this preliminary phase was to verify message routing correctness, barrier synchronization, duplicate suppression, and dynamic quorum re-normalization under simulated network partitions and edge client churn.
+Prior to executing convolutional neural network training on agricultural benchmarks, I implemented and exercised a coordinator-worker smoke-test prototype using RabbitMQ (AMQP~0-9-1) and Python. These tests verify message routing, worker acknowledgments, sample-weighted aggregation, and complete versus partial-quorum handling with synthetic scalar updates. The coordinator code includes round/client validation and duplicate suppression, but the saved unit tests do not directly exercise duplicate delivery. PlantVillage processing and CNN model evaluation have not yet been run.
 
 The prototype deploys one coordinator process (\texttt{coordinator.py}) and three isolated worker processes (\texttt{client.py}) representing Farm~A, Farm~B, and Farm~C. Communication follows the dual-exchange architecture defined in Section~\ref{sec:materials_methods}:
 \begin{itemize}[leftmargin=*]
@@ -576,7 +576,7 @@ The prototype deploys one coordinator process (\texttt{coordinator.py}) and thre
 Two distinct distributed execution tracks were evaluated:
 \begin{enumerate}[leftmargin=*]
     \item \textbf{Nominal Complete Quorum Track ($K=3$):} All three farm clients actively participate. Client sample allocations and simulated local update deltas were set to: Farm~A ($n_A = 10, \Delta w_A = +1.0$), Farm~B ($n_B = 20, \Delta w_B = +2.0$), and Farm~C ($n_C = 30, \Delta w_C = +4.0$), starting from initial weights $w^{(0)} = 0.0$.
-    \item \textbf{Fail-Stop Client Dropout Track ($K=2$):} Client~C experiences an abrupt network failure and fails to respond within the barrier timeout. The coordinator detects the timeout, confirms that the surviving quorum meets the minimum threshold ($|\mathcal{S}_t| \ge q_{\min} = 2$), and dynamically re-normalizes aggregation weights over the responsive subset $\mathcal{S}_t = \{A, B\}$.
+    \item \textbf{Partial-Quorum Track ($K=2$):} Farm~C is omitted from the active worker processes, while the coordinator still publishes its command to the durable queue. Farms~A and~B respond, meeting the configured minimum quorum of 2; the coordinator then re-normalizes aggregation weights over $\mathcal{S}_t = \{A, B\}$. The demo configures a 3-second collection deadline, but the saved output does not record elapsed runtime or establish that the deadline was reached.
 \end{enumerate}
 
 \begin{table}[H]
@@ -586,11 +586,11 @@ Two distinct distributed execution tracks were evaluated:
 \label{tab:preliminary_results}
 \begin{tabularx}{\textwidth}{P{2.5cm} P{2.0cm} P{1.3cm} P{2.0cm} P{2.2cm} Q}
 \toprule
-\textbf{Scenario} & \textbf{Quorum ($\mathcal{S}_t$)} & \textbf{Samples} & \textbf{Global Model ($w^{(1)}$)} & \textbf{Barrier Latency ($T$)} & \textbf{Distributed State \& Queue Behavior} \\
+\textbf{Scenario} & \textbf{Responding Farms} & \textbf{Samples} & \textbf{Global Model ($w^{(1)}$)} & \textbf{Wait Limit} & \textbf{Observed Outcome} \\
 \midrule
-\textbf{Complete Quorum (Nominal)} & Farm A, B, C & $60$ & \textbf{2.833333} & \textbf{120\,ms} ($T_{\text{agg}}{=}12.5$\,ms) & Quorum complete ($3/3$). All queues drained; manual acks confirmed. \\
+\textbf{Complete Quorum (Nominal)} & Farm A, B, C & $60$ & \textbf{2.833333} & 10\,s configured & All three updates accepted; round completed. \\
 \midrule
-\textbf{Client Dropout (Fault-Tolerant)} & Farm A, B & $30$ & \textbf{1.666667} & \textbf{3.00\,s} ($\tau$ timeout barrier) & Dynamic re-normalization over $\mathcal{S}_t=\{A,B\}$. Farm C command preserved in durable queue. \\
+\textbf{Farm C Offline (Partial Quorum)} & Farm A, B & $30$ & \textbf{1.666667} & 3\,s configured & Two updates accepted; Farm C's command remained queued. \\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -599,16 +599,11 @@ As documented in Table~\ref{tab:preliminary_results}, the complete quorum trial 
 \begin{equation}
 w^{(1)} = \frac{10(1.0) + 20(2.0) + 30(4.0)}{10 + 20 + 30} = \frac{170}{60} \approx 2.833333
 \end{equation}
-Under the dropout scenario, the barrier timeout elapsed without coordinator deadlocks. The coordinator successfully excluded the non-responsive node and re-weighted the surviving nodes:
+In the partial-quorum scenario, the coordinator accepted Farms~A and~B and re-weighted their updates:
 \begin{equation}
 w^{(1)}_{\text{dropout}} = \frac{10(1.0) + 20(2.0)}{10 + 20} = \frac{50}{30} \approx 1.666667
 \end{equation}
-From a distributed systems timing perspective, the benchmark demonstrated two critical operational regimes:
-\begin{itemize}[leftmargin=*]
-    \item \textbf{Nominal Barrier Latency:} When all workers are responsive, the barrier unblocks immediately ($T_{\text{barrier}} \approx 120$\,ms), and the weighted parameter reduction executes in $T_{\text{agg}} = 12.5$\,ms.
-    \item \textbf{Fault-Recovery Timing:} In the presence of edge client fail-stop crashes, the coordinator's wall-clock latency is strictly bounded by the fault-detection timeout ($\tau = 3.00$\,s). Rather than hanging indefinitely, the coordinator unblocks at $t = \tau$, verifying the quorum criterion ($|\mathcal{S}_t| = 2 \ge q_{\min}$) and executing the partial aggregation in $T_{\text{agg}} = 8.2$\,ms.
-\end{itemize}
-Crucially, inspection of RabbitMQ broker internals confirmed that Farm~C's \texttt{FitIns} message remained safely buffered in its durable queue with persistent delivery mode ($2$), validating that intermittent rural disconnections do not cause message loss and enable zero-overhead state catch-up when the edge node reconnects. The correctness of the mathematical reduction and timing boundaries was further verified through the automated unit test suite (\texttt{test\_protocol.py}).
+These tests verify message exchange and sample-weighted aggregation with synthetic scalar updates. The captured console output and JSON files do not include measured round latency or aggregation runtime, so no timing performance claim is made here. The broker screenshot shows Farm~C's command still ready in its durable queue after the partial-quorum run. This demonstrates queue retention in this local test; it does not test Farm~C's later recovery or establish zero-overhead catch-up. The automated unit tests check the weighted average and reject incompatible update dimensions and non-positive sample counts.
 
 % =====================================================================
 %  5. DISCUSSION AND EXPECTED RESEARCH DIRECTION
@@ -630,7 +625,7 @@ Based on the theoretical framework established in Section~\ref{sec:related_work}
 This research proposal establishes a structured and reproducible foundation for evaluating federated learning algorithms in precision agriculture under data heterogeneity. Key milestones accomplished to date include:
 \begin{itemize}[leftmargin=*]
     \item Formulation of the mathematical and distributed systems framework governing FedAvg, FedProx, AMQP message protocols, timeout/quorum behavior, and Dirichlet-based non-IID data partitioning.
-    \item Specification and smoke-test prototype of a three-farm RabbitMQ communication path with persistent messages, manual acknowledgments, round correlation, and sample-weighted aggregation; integration with CNN training remains future work.
+\item Specification and smoke-test prototype of a three-farm RabbitMQ communication path with persistent messages, manual acknowledgments, round correlation, and synthetic sample-weighted aggregation; integration with CNN training remains future work.
     \item Formulation of a comprehensive experimental evaluation matrix targeting practical distributed system challenges, including communication complexity, model stability, per-disease equity, and edge client dropouts.
     \item Conceptual design of an edge-compatible farmer decision-support workflow delivering disease classifications alongside calibrated confidence scores.
 \end{itemize}
@@ -668,12 +663,12 @@ To guarantee timely completion and rigorous scientific execution, the project is
 \toprule
 \textbf{Phase} & \textbf{Core Activities \& Milestones} & \textbf{Timeline} & \textbf{Deliverable \& Status} \\
 \midrule
-\textbf{Phase 1} & AMQP Middleware \& Coordinator-Worker Prototype & Weeks 1--3 & RabbitMQ harness, quorum logic, unit tests (\textbf{Completed}). \\
-\textbf{Phase 2} & PlantVillage Dataset Sharding \& Dirichlet Engine & Weeks 4--5 & Automated data partitioning ($\alpha \in \{\infty, 1.0, 0.5, \text{disjoint}\}$) (\textbf{Completed}). \\
-\textbf{Phase 3} & CNN Backbone \& PyTorch FedAvg/FedProx Loops & Weeks 6--7 & Local proximal training loop $\frac{\mu}{2}\|w-w^{(t)}\|^2$ and serialization (\textbf{In Progress}). \\
-\textbf{Phase 4} & Systematic Benchmark of the 6 Experimental Tracks & Weeks 8--10 & Comprehensive metric logging ($Acc$, F1, $S_{\Delta acc}$, dropout at $t=5$). \\
-\textbf{Phase 5} & ONNX Edge Compilation \& Calibrated Advisory CLI & Weeks 11--12 & Standalone ONNX runtime with Temperature Scaling / ECE calibration. \\
-\textbf{Phase 6} & Comparative Ablation Analysis \& Final Report Writing & Weeks 13--14 & Camera-ready 8--15 page scientific report adhering to required MDPI format guidelines (\textit{Agronomy} / \textit{Applied Sciences}). \\
+\textbf{Phase 1} & AMQP Middleware \& Coordinator-Worker Prototype & Weeks 1--3 & Workshop~6 message tests and synthetic aggregation smoke tests (\textbf{Completed}). \\
+\textbf{Phase 2} & PlantVillage Dataset Sharding \& Dirichlet Engine & Weeks 4--5 & Obtain/process dataset and verify client partitions (\textbf{Planned}). \\
+\textbf{Phase 3} & CNN Baseline \& PyTorch FedAvg/FedProx Loops & Weeks 6--7 & Train and evaluate an initial image-classification baseline (\textbf{Planned}). \\
+\textbf{Phase 4} & Systematic Benchmark of the 6 Experimental Tracks & Weeks 8--10 & Metric logging for accuracy, F1, stability, and dropout (\textbf{Planned}). \\
+\textbf{Phase 5} & ONNX Edge Compilation \& Calibrated Advisory CLI & Weeks 11--12 & Standalone ONNX runtime and calibration evaluation (\textbf{Planned}). \\
+\textbf{Phase 6} & Comparative Ablation Analysis \& Final Report Writing & Weeks 13--14 & Final scientific analysis and MDPI-formatted manuscript (\textbf{Planned}). \\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -703,7 +698,7 @@ python Workshop6/solution2/run_demo.py --dropout farm-c
 \end{enumerate}
 
 \subsection{Conclusions}
-This proposal formulates the initial research foundation and system architecture for comparing FedAvg and FedProx across distributed agricultural cooperatives. By decoupling the distributed transport layer through RabbitMQ AMQP 0-9-1, enforcing quorum-bounded synchronization barriers, and anchoring local loss functions via proximal regularization, the proposed system addresses data privacy, rural WAN bandwidth limits, and catastrophic forgetting of minority diseases. The empirical verification of the distributed prototype confirms that the coordinator dynamically tolerates edge dropouts, preserves messages in durable queues, and guarantees sample-weighted convergence without deadlock. This research will directly expand into the final MDPI research article through full-scale convolutional training, systematic parameter sweeps, and standalone C++ edge compilation.
+This proposal establishes the research question and system design for a future comparison of FedAvg and FedProx across simulated agricultural clients. The Workshop~6 experiments provide preliminary evidence that RabbitMQ can route coordinator/worker messages and that the prototype computes sample-weighted aggregation for complete and partial-quorum runs with synthetic scalar updates. The Farm~C command remained in its durable queue in the saved dropout screenshot. These smoke tests do not include PlantVillage, CNN training, classification metrics, or a measurement of round latency. I plan to conduct those AI experiments in the next stages of the proposed study.
 
 \authorcontributions{Conceptualization, D.P.; methodology, D.P.; software, D.P.; validation, D.P.; formal analysis, D.P.; investigation, D.P.; resources, D.P.; data curation, D.P.; writing---original draft preparation, D.P.; writing---review and editing, D.P.; visualization, D.P.; supervision, D.P.}
 
